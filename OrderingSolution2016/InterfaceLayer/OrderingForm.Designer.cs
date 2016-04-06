@@ -248,6 +248,7 @@
             this.txtFreight.Name = "txtFreight";
             this.txtFreight.Size = new System.Drawing.Size(100, 20);
             this.txtFreight.TabIndex = 21;
+            this.txtFreight.Text = "0";
             // 
             // groupBox1
             // 
@@ -348,6 +349,7 @@
             this.button2.TabIndex = 24;
             this.button2.Text = "Submit Order";
             this.button2.UseVisualStyleBackColor = false;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // label13
             // 

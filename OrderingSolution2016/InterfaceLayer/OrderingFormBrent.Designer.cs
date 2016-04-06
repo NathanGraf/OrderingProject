@@ -30,15 +30,16 @@
         {
             this.OrderList = new System.Windows.Forms.ListBox();
             this.ShippingPanel = new System.Windows.Forms.Panel();
-            this.textBox4 = new System.Windows.Forms.TextBox();
+            this.SendBtn = new System.Windows.Forms.Button();
+            this.ShipCountryBox = new System.Windows.Forms.TextBox();
             this.label15 = new System.Windows.Forms.Label();
-            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.ShipPostalBox = new System.Windows.Forms.TextBox();
             this.label14 = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.ShipRegionBox = new System.Windows.Forms.TextBox();
             this.label13 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.ShipCityBox = new System.Windows.Forms.TextBox();
             this.label12 = new System.Windows.Forms.Label();
-            this.AddressBox = new System.Windows.Forms.TextBox();
+            this.ShipAddressBox = new System.Windows.Forms.TextBox();
             this.label11 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.ShipNameBox = new System.Windows.Forms.TextBox();
@@ -65,6 +66,8 @@
             this.InStockBox = new System.Windows.Forms.TextBox();
             this.SupplierBox = new System.Windows.Forms.TextBox();
             this.FinalBtn = new System.Windows.Forms.Button();
+            this.UserLbl = new System.Windows.Forms.Label();
+            this.CustLbl = new System.Windows.Forms.Label();
             this.ShippingPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.QuantityUpdown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.DiscountUpDown)).BeginInit();
@@ -81,15 +84,16 @@
             // ShippingPanel
             // 
             this.ShippingPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.ShippingPanel.Controls.Add(this.textBox4);
+            this.ShippingPanel.Controls.Add(this.SendBtn);
+            this.ShippingPanel.Controls.Add(this.ShipCountryBox);
             this.ShippingPanel.Controls.Add(this.label15);
-            this.ShippingPanel.Controls.Add(this.textBox3);
+            this.ShippingPanel.Controls.Add(this.ShipPostalBox);
             this.ShippingPanel.Controls.Add(this.label14);
-            this.ShippingPanel.Controls.Add(this.textBox2);
+            this.ShippingPanel.Controls.Add(this.ShipRegionBox);
             this.ShippingPanel.Controls.Add(this.label13);
-            this.ShippingPanel.Controls.Add(this.textBox1);
+            this.ShippingPanel.Controls.Add(this.ShipCityBox);
             this.ShippingPanel.Controls.Add(this.label12);
-            this.ShippingPanel.Controls.Add(this.AddressBox);
+            this.ShippingPanel.Controls.Add(this.ShipAddressBox);
             this.ShippingPanel.Controls.Add(this.label11);
             this.ShippingPanel.Controls.Add(this.label10);
             this.ShippingPanel.Controls.Add(this.ShipNameBox);
@@ -100,18 +104,29 @@
             this.ShippingPanel.Controls.Add(this.label7);
             this.ShippingPanel.Controls.Add(this.label8881);
             this.ShippingPanel.Controls.Add(this.RequiredDatePicker);
+            this.ShippingPanel.Enabled = false;
             this.ShippingPanel.Location = new System.Drawing.Point(-1, 260);
             this.ShippingPanel.Name = "ShippingPanel";
             this.ShippingPanel.Size = new System.Drawing.Size(614, 208);
             this.ShippingPanel.TabIndex = 55;
             this.ShippingPanel.TabStop = true;
             // 
-            // textBox4
+            // SendBtn
             // 
-            this.textBox4.Location = new System.Drawing.Point(414, 112);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(121, 20);
-            this.textBox4.TabIndex = 72;
+            this.SendBtn.Location = new System.Drawing.Point(12, 138);
+            this.SendBtn.Name = "SendBtn";
+            this.SendBtn.Size = new System.Drawing.Size(578, 47);
+            this.SendBtn.TabIndex = 73;
+            this.SendBtn.Text = "Send Order";
+            this.SendBtn.UseVisualStyleBackColor = true;
+            this.SendBtn.Click += new System.EventHandler(this.SendBtn_Click);
+            // 
+            // ShipCountryBox
+            // 
+            this.ShipCountryBox.Location = new System.Drawing.Point(414, 112);
+            this.ShipCountryBox.Name = "ShipCountryBox";
+            this.ShipCountryBox.Size = new System.Drawing.Size(121, 20);
+            this.ShipCountryBox.TabIndex = 72;
             // 
             // label15
             // 
@@ -122,12 +137,12 @@
             this.label15.TabIndex = 71;
             this.label15.Text = "Country";
             // 
-            // textBox3
+            // ShipPostalBox
             // 
-            this.textBox3.Location = new System.Drawing.Point(266, 112);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(92, 20);
-            this.textBox3.TabIndex = 70;
+            this.ShipPostalBox.Location = new System.Drawing.Point(266, 112);
+            this.ShipPostalBox.Name = "ShipPostalBox";
+            this.ShipPostalBox.Size = new System.Drawing.Size(92, 20);
+            this.ShipPostalBox.TabIndex = 70;
             // 
             // label14
             // 
@@ -138,12 +153,12 @@
             this.label14.TabIndex = 69;
             this.label14.Text = "Postal Code";
             // 
-            // textBox2
+            // ShipRegionBox
             // 
-            this.textBox2.Location = new System.Drawing.Point(44, 109);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(137, 20);
-            this.textBox2.TabIndex = 68;
+            this.ShipRegionBox.Location = new System.Drawing.Point(44, 109);
+            this.ShipRegionBox.Name = "ShipRegionBox";
+            this.ShipRegionBox.Size = new System.Drawing.Size(137, 20);
+            this.ShipRegionBox.TabIndex = 68;
             // 
             // label13
             // 
@@ -154,12 +169,12 @@
             this.label13.TabIndex = 67;
             this.label13.Text = "Region";
             // 
-            // textBox1
+            // ShipCityBox
             // 
-            this.textBox1.Location = new System.Drawing.Point(429, 83);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(161, 20);
-            this.textBox1.TabIndex = 66;
+            this.ShipCityBox.Location = new System.Drawing.Point(429, 83);
+            this.ShipCityBox.Name = "ShipCityBox";
+            this.ShipCityBox.Size = new System.Drawing.Size(161, 20);
+            this.ShipCityBox.TabIndex = 66;
             // 
             // label12
             // 
@@ -170,12 +185,12 @@
             this.label12.TabIndex = 65;
             this.label12.Text = "City";
             // 
-            // AddressBox
+            // ShipAddressBox
             // 
-            this.AddressBox.Location = new System.Drawing.Point(241, 83);
-            this.AddressBox.Name = "AddressBox";
-            this.AddressBox.Size = new System.Drawing.Size(162, 20);
-            this.AddressBox.TabIndex = 64;
+            this.ShipAddressBox.Location = new System.Drawing.Point(241, 83);
+            this.ShipAddressBox.Name = "ShipAddressBox";
+            this.ShipAddressBox.Size = new System.Drawing.Size(162, 20);
+            this.ShipAddressBox.TabIndex = 64;
             // 
             // label11
             // 
@@ -287,7 +302,7 @@
             this.RemoveBtn.TabIndex = 4;
             this.RemoveBtn.Text = "Remove";
             this.RemoveBtn.UseVisualStyleBackColor = true;
-            this.RemoveBtn.Click += new System.EventHandler(this.button1_Click);
+            this.RemoveBtn.Click += new System.EventHandler(this.RemoveBtn_Click);
             // 
             // label1
             // 
@@ -430,11 +445,31 @@
             this.FinalBtn.UseVisualStyleBackColor = true;
             this.FinalBtn.Click += new System.EventHandler(this.FinalBtn_Click);
             // 
+            // UserLbl
+            // 
+            this.UserLbl.AutoSize = true;
+            this.UserLbl.Location = new System.Drawing.Point(9, 12);
+            this.UserLbl.Name = "UserLbl";
+            this.UserLbl.Size = new System.Drawing.Size(56, 13);
+            this.UserLbl.TabIndex = 57;
+            this.UserLbl.Text = "Employee:";
+            // 
+            // CustLbl
+            // 
+            this.CustLbl.AutoSize = true;
+            this.CustLbl.Location = new System.Drawing.Point(9, 38);
+            this.CustLbl.Name = "CustLbl";
+            this.CustLbl.Size = new System.Drawing.Size(54, 13);
+            this.CustLbl.TabIndex = 58;
+            this.CustLbl.Text = "Customer:";
+            // 
             // OrderingFormBrent
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(602, 458);
+            this.Controls.Add(this.CustLbl);
+            this.Controls.Add(this.UserLbl);
             this.Controls.Add(this.FinalBtn);
             this.Controls.Add(this.ShippingPanel);
             this.Controls.Add(this.SupplierBox);
@@ -478,15 +513,15 @@
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TextBox ShipNameBox;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.TextBox AddressBox;
+        private System.Windows.Forms.TextBox ShipAddressBox;
         private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox ShipCityBox;
         private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.TextBox ShipPostalBox;
         private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox ShipRegionBox;
         private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.TextBox ShipCountryBox;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.ComboBox ProductBox;
         private System.Windows.Forms.Button AddBtn;
@@ -504,5 +539,8 @@
         private System.Windows.Forms.TextBox InStockBox;
         private System.Windows.Forms.TextBox SupplierBox;
         private System.Windows.Forms.Button FinalBtn;
+        private System.Windows.Forms.Label UserLbl;
+        private System.Windows.Forms.Label CustLbl;
+        private System.Windows.Forms.Button SendBtn;
     }
 }

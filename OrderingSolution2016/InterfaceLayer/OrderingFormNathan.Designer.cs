@@ -68,6 +68,7 @@
             this.label10 = new System.Windows.Forms.Label();
             this.lsDetails = new System.Windows.Forms.ListBox();
             this.lblTDate = new System.Windows.Forms.Label();
+            this.lblorID = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.SuspendLayout();
@@ -416,9 +417,9 @@
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(334, 346);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(110, 13);
+            this.label10.Size = new System.Drawing.Size(31, 13);
             this.label10.TabIndex = 14;
-            this.label10.Text = "Final Cost After Taxes";
+            this.label10.Text = "Cost ";
             // 
             // lsDetails
             // 
@@ -431,17 +432,27 @@
             // lblTDate
             // 
             this.lblTDate.AutoSize = true;
-            this.lblTDate.Location = new System.Drawing.Point(199, 28);
+            this.lblTDate.Location = new System.Drawing.Point(195, 23);
             this.lblTDate.Name = "lblTDate";
             this.lblTDate.Size = new System.Drawing.Size(17, 13);
             this.lblTDate.TabIndex = 16;
             this.lblTDate.Text = "\"\"";
+            // 
+            // lblorID
+            // 
+            this.lblorID.AutoSize = true;
+            this.lblorID.Location = new System.Drawing.Point(251, 32);
+            this.lblorID.Name = "lblorID";
+            this.lblorID.Size = new System.Drawing.Size(17, 13);
+            this.lblorID.TabIndex = 17;
+            this.lblorID.Text = "\"\"";
             // 
             // OrderingFormNathan
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(836, 396);
+            this.Controls.Add(this.lblorID);
             this.Controls.Add(this.lblTDate);
             this.Controls.Add(this.lsDetails);
             this.Controls.Add(this.label10);
@@ -506,5 +517,6 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.TextBox txtRegion;
+        private System.Windows.Forms.Label lblorID;
     }
 }

@@ -14,10 +14,11 @@ namespace InterfaceLayer
 {
     public partial class OrderingFormBrent : Form
     {
-        string CurrentCustomer;
-        int CurrentEmployee;
+        string CurrentCustomer = "Error";
+        int CurrentEmployee = 0;
 
         List<Product> fer = Business.ProductList();
+        List<OrderDetail> BetterNameThanFer = new List<OrderDetail>();
 
         public OrderingFormBrent()
         {
@@ -31,6 +32,8 @@ namespace InterfaceLayer
             InitializeComponent();
             CurrentCustomer = CustomerID;
             CurrentEmployee = EmployeeID;
+            CustLbl.Text += CurrentCustomer;
+            UserLbl.Text += CurrentEmployee.ToString();
             //ProductBox.Items
             foreach (Product er in fer)
             {
@@ -38,22 +41,30 @@ namespace InterfaceLayer
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void RemoveBtn_Click(object sender, EventArgs e)
         {
             if (OrderList.SelectedIndex >= 0)
+            {
+                BetterNameThanFer.RemoveAt(OrderList.SelectedIndex);
                 OrderList.Items.RemoveAt(OrderList.SelectedIndex);
+            }
         }
 
         private void AddBtn_Click(object sender, EventArgs e)
         {
             string AddToOrder = "";
             AddToOrder += ProductBox.SelectedItem.ToString();
-            AddToOrder += " (" + QuantityUpdown.Value + ") : ";
-            //decimal DaPrice = fer[ProductBox.SelectedIndex].UnitPrice;
-            //DaPrice = (DaPrice * QuantityUpdown.Value);
-            //AddToOrder += DaPrice.ToString("c");
-            AddToOrder += PriceBox.Text;
+            AddToOrder += " (" + QuantityUpdown.Value + ")";
+            if (DiscountUpDown.Value != 0)
+            {
+                AddToOrder += " [" + ((DiscountUpDown.Value)*100).ToString("#") + "% Discount]";
+            }
+            AddToOrder += " : " + PriceBox.Text;
             OrderList.Items.Add(AddToOrder);
+            //Order Detail code
+            int Das = ProductBox.SelectedIndex;
+            OrderDetail ThisPart = new OrderDetail(0, fer[Das].ProductID, fer[Das].UnitPrice, Convert.ToInt16(QuantityUpdown.Value), Convert.ToSingle(DiscountUpDown.Value));
+            BetterNameThanFer.Add(ThisPart);
         }
 
         private void ProductBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -139,6 +150,15 @@ namespace InterfaceLayer
             PriceBox.Enabled = !DatWay;
             SupplierBox.Enabled = !DatWay;
             InStockBox.Enabled = !DatWay;
+        }
+
+        private void SendBtn_Click(object sender, EventArgs e)
+        {
+            Order NewOrder = new Order(3, CurrentCustomer, CurrentEmployee, DateTime.Today, RequiredDatePicker.Value, null, null, null, ShipNameBox.Text, ShipAddressBox.Text, ShipCityBox.Text, ShipRegionBox.Text, ShipPostalBox.Text, ShipCountryBox.Text);
+            BusinessLayer.Business.SaveOrder(NewOrder);
+
+
+            //Business.SaveDetails(NewOrder.OrderID,
         }
     }
 }

@@ -14,22 +14,34 @@ namespace InterfaceLayer
 {
     public partial class OrderingFormBrett : Form
     {
-        string CustomerID;
-        int EmployeeID;
-        List<OrderDetail> DetailList;
-        List<BrettProductPanel> pnlList = new List<BrettProductPanel>();
-        Customer currentCustomer;
-        List<Product> productList;
+        private bool isEditting = false;
+        private string customerID;
+        private int employeeID;
+        private List<OrderDetail> detailList;
+        private List<OrderDetail> tempDetailList;
+        private List<BrettProductPanel> pnlList = new List<BrettProductPanel>();
+        private Customer currentCustomer;
+        private List<Product> productList;
+        private int orderID = 0;
+        private Order curOrder;
+        private bool blnErrorOccured = false;
 
+        private List<Shipper> shipperList;
 
-
-        public OrderingFormBrett(string CustomerID, int EmployeeID)
+        public OrderingFormBrett(string customerID, int emloyeeID)
         {
             InitializeComponent();
-            this.CustomerID = CustomerID;
-            this.EmployeeID = EmployeeID;
-            lblCustomerID.Text = CustomerID;
-            lblEmployeeID.Text = EmployeeID.ToString();
+            PreInitForm(customerID, emloyeeID);
+        }
+
+        public OrderingFormBrett(string customerID, int employeeID, int orderID)
+        {
+            InitializeComponent();
+            PreInitForm(customerID, employeeID);
+            curOrder = Business.FindOrder(orderID);
+            this.orderID = curOrder.OrderID;
+            tempDetailList = Business.OrderDetailList(orderID);
+            isEditting = true;
         }
 
         private void OrderingFormBrett_Load(object sender, EventArgs e)
@@ -37,40 +49,113 @@ namespace InterfaceLayer
             productList = Business.ProductList();
 
             pnlContainer.BorderStyle = BorderStyle.FixedSingle;
-            AddPanel();
-
-            currentCustomer = Business.GetCustomer(CustomerID);
-
+            
+            currentCustomer = Business.GetCustomer(customerID);
+            txtContactTitle.Text = currentCustomer.ContactTitle;
+            txtContactName.Text = currentCustomer.ContactName;
             txtPostalCode.Text = currentCustomer.PostalCode;
             txtRegion.Text = currentCustomer.Region;
-            txtShipAddress.Text = currentCustomer.Address;
-            txtShipCity.Text = currentCustomer.City;
-            txtShipCountry.Text = currentCustomer.Country;
+            txtAddress.Text = currentCustomer.Address;
+            txtCity.Text = currentCustomer.City;
+            txtCountry.Text = currentCustomer.Country;
             txtRegion.Text = currentCustomer.Region;
             txtFax.Text = currentCustomer.Fax;
             txtPhone.Text = currentCustomer.Phone;
 
-            cmbShipVia.DataSource = Business.ShipperTable();
+            int dateLength = DateTime.Now.Date.ToString().Length;
+            int dateWantedLength = 0;
+            string date = DateTime.Now.Date.ToString();
+            for (int i = 0; i< dateLength; i++)
+            {
+                if (date.Substring(i, 1) == " ")
+                {
+                    dateWantedLength = i;
+                    break;
+                }
+            }
+            txtOrderDate.Text = date.Substring(0, dateWantedLength);
+
+            if (isEditting)
+                txtShippedDate.Enabled = true;
+            else
+                txtShippedDate.Enabled = false;
+
+            shipperList = Business.ShipperTable();
+            cmbShipVia.DataSource = shipperList;
             cmbShipVia.ValueMember = "ShipperID";
             cmbShipVia.DisplayMember = "CompanyName";
             cmbShipVia.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbShipVia.SelectedIndex = -1;
 
-            TxtRequiredDateMethods();
+            if (isEditting)
+            {
+                LoadOrder();
+                foreach (OrderDetail detail in tempDetailList)
+                {
+                    AddPanel(detail);
+                }
+            }
+
+            AddPanel();
+        }
+
+        private void PreInitForm(string customerID, int employeeID)
+        {
+            this.customerID = customerID;
+            this.employeeID = employeeID;
+            lblCustomerID.Text = customerID;
+            lblEmployeeID.Text = employeeID.ToString();
+        }
+
+        private void LoadOrder()
+        {
+            lblOrderID.Text = orderID.ToString();
+
+            
+
+            int dateLength = DateTime.Now.Date.ToString().Length;
+            int dateWantedLength = 0;
+            string date = curOrder.RequiredDate.ToString();
+            for (int i = 0; i< dateLength; i++)
+            {
+                if (date.Substring(i, 1) == " ")
+                {
+                    dateWantedLength = i;
+                    break;
+                }
+            }
+
+            txtRequiredDate.Text = date.Substring(0, dateWantedLength);
+            //txtRequiredDate.Text = curOrder.RequiredDate.ToString();
+
+            for (int i = 0; i < shipperList.Count; i++)
+                if (shipperList[i].ShipperID == curOrder.ShipVia)
+                    cmbShipVia.SelectedIndex = i;
         }
 
         private void AddPanel()
         {
+            BrettProductPanel BPP = new BrettProductPanel(pnlList, productList, pnlContainer.Width, pnlContainer.Height, pnlContainer.Left);
+            SetupPanel(BPP);
+        }
+
+        private void AddPanel(OrderDetail detail)
+        {
+            BrettProductPanel BPP = new BrettProductPanel(pnlList, productList, pnlContainer.Width, pnlContainer.Height, pnlContainer.Left, detail.ProductID, detail.Quantity, detail.Discount, detail.UnitPrice);
+            SetupPanel(BPP);
+        }
+
+        private void SetupPanel(BrettProductPanel BPP)
+        {
             try
             {
                 lblError.Text = "";
-                BrettProductPanel BPP = new BrettProductPanel(pnlList, productList, pnlContainer.Width, pnlContainer.Height, pnlContainer.Left);
                 pnlContainer.Controls.Add(BPP);
                 pnlList.Add(BPP);
                 BPP.RemovePanel += RemovePanel;
-                BPP.AddProductPanel += AddNewProductPanel;
+                BPP.AddProductPanel += AddPanel;
                 BPP.CalcFreight += CalculateFreight;
-                BPP.WowSelectedIndexIsAnnoying();
+                BPP.ErrorInCommit += BPP_ErrorInCommit;
 
                 // I dont know if I like this way for it is efficient
                 lblProduct.Left = BrettProductPanel.lblProductX;
@@ -79,6 +164,7 @@ namespace InterfaceLayer
                 lblQuantity.Left = BrettProductPanel.lblQuantityX;
                 lblDiscount.Left = BrettProductPanel.lblDiscountX;
                 lblTotalPrice.Left = BrettProductPanel.lblTotalPriceX;
+                BPP.WowSelectedIndexIsAnnoying();
             }
             catch (Exception ex)
             {
@@ -86,77 +172,47 @@ namespace InterfaceLayer
             }
         }
 
-        private void btnRandomOrder_Click(object sender, EventArgs e)
+        private void btnMakeOrder_Click(object sender, EventArgs e)
         {
             try
             {
-                Order o = new Order(1);
-                o.CustomerID = lblCustomerID.Text;
-                o.EmployeeID = Convert.ToInt32(lblEmployeeID.Text);
-                o.OrderDate = DateTime.Now;
-                o.RequiredDate = Convert.ToDateTime(txtRequiredDate.Text);
-                o.ShippedDate = null;
-                o.ShipVia = Convert.ToInt32(cmbShipVia.SelectedValue);
-                o.Freight = Convert.ToDecimal(txtFreight.Text); //Retrieve later.
-                o.ShipName = currentCustomer.CompanyName;
-                o.ShipAddress = txtShipAddress.Text;
-                o.ShipCity = txtShipCity.Text;
-                o.ShipRegion = txtRegion.Text;
-                o.ShipPostalCode = txtPostalCode.Text;
-                o.ShipCountry = txtShipCountry.Text;
-                o.EmployeeName = null; // I need the employee name.
-                o.ShipperName = cmbShipVia.Text;
+                string companyName = currentCustomer.CompanyName;
+                string address = currentCustomer.Address;
+                string city = txtCity.Text;
+                string region = txtRegion.Text;
+                string postalCode = txtPostalCode.Text;
+                string country = txtCountry.Text;
 
-                Business.SaveOrder(o);
-                DetailList = new List<OrderDetail>();
+                currentCustomer.CompanyName = companyName;
+                currentCustomer.City = city;
+                currentCustomer.Region = region;
+                currentCustomer.PostalCode = postalCode;
+                currentCustomer.Country = country;
+                Business.UpdateExistingCustomer(currentCustomer);
 
-                foreach (BrettProductPanel pnl in pnlList)
-                {
-                    if (pnl.selectedProductID != -1 && pnl.quantity > 0)
-                        DetailList.Add(new OrderDetail(o.OrderID, pnl.selectedProductID, pnl.totalPrice, pnl.quantity, pnl.discount));
-                }
+                if (curOrder == null)
+                    curOrder = new Order(1);
 
-                //foreach (Panel pnl in pnlContainer.Controls)
-                //{
-                //    int productID = -1;
-                //    decimal unitPrice = 0;
-                //    short quantity = 0;
-                //    float discount = 0;
+                curOrder.CustomerID = lblCustomerID.Text;
+                curOrder.EmployeeID = Convert.ToInt32(lblEmployeeID.Text);
+                curOrder.OrderDate = DateTime.Now;
+                curOrder.RequiredDate = Convert.ToDateTime(txtRequiredDate.Text);
+                curOrder.ShippedDate = null;
+                curOrder.ShipVia = Convert.ToInt32(cmbShipVia.SelectedValue);
+                curOrder.Freight = Convert.ToDecimal(txtFreight.Text); //Retrieve later.
+                curOrder.ShipName = companyName;
+                curOrder.ShipAddress = address;
+                curOrder.ShipCity = city;
+                curOrder.ShipRegion = region;
+                curOrder.ShipPostalCode = postalCode;
+                curOrder.ShipCountry = country;
+                curOrder.EmployeeName = null; // I need the employee name.
+                curOrder.ShipperName = cmbShipVia.Text;
 
-                //    foreach (Control cntrl in pnl.Controls)
-                //    {
-                //        if (((ComboBox)pnl.Controls[0]).SelectedIndex != -1)
-                //        {
-                //            if (cntrl is ComboBox)
-                //            {
-                //                productID = Convert.ToInt32(((ComboBox)cntrl).SelectedValue);
-                //            }
-
-                //            if (cntrl is TextBox)
-                //            {
-                //                if (cntrl.Name.Contains("txtQuantity"))
-                //                {
-                //                    quantity = Convert.ToInt16(((TextBox)cntrl).Text);
-                //                }
-
-                //                if (cntrl.Name.Contains("txtPrice"))
-                //                {
-                //                    unitPrice = Convert.ToDecimal(((TextBox)cntrl).Text);
-                //                }
-
-                //                if (cntrl.Name.Contains("txtDiscount"))
-                //                {
-                //                    discount = Convert.ToSingle(((TextBox)cntrl).Text) / 100;
-                //                }
-                //            }
-                //        }
-                //    }
-
-                //    if (productID != -1 && quantity > 0)
-                //        DetailList.Add(new OrderDetail(o.OrderID, productID, unitPrice, quantity, discount));
-                //}
-
-                Business.SaveDetails(o.OrderID, DetailList);
+                Business.SaveOrder(curOrder);
+                orderID = curOrder.OrderID;
+                lblOrderID.Text = orderID.ToString();
+                btnCommitDetails.Enabled = true;
             }
             catch (Exception ex)
             {
@@ -196,25 +252,22 @@ namespace InterfaceLayer
             txtFreight.Text = freight.ToString();
         }
 
-        public void TxtRequiredDateMethods()
+        private void DateEnter(object sender, EventArgs e)
         {
-            txtRequiredDate.Enter += (sender, e) =>
+            if (((TextBox)sender).Text == "DD/MM/YYYY")
             {
-                if (txtRequiredDate.Text == "DD/MM/YYYY")
-                {
-                    txtRequiredDate.ForeColor = Color.FromKnownColor(KnownColor.WindowText);
-                    txtRequiredDate.Text = "";
-                }
-            };
+                ((TextBox)sender).ForeColor = Color.FromKnownColor(KnownColor.WindowText);
+                ((TextBox)sender).Text = "";
+            }
+        }
 
-            txtRequiredDate.Leave += (sender, e) =>
+        private void DateLeave(object sender, EventArgs e)
+        {
+            if (((TextBox)sender).Text == "")
             {
-                if (txtRequiredDate.Text == "")
-                {
-                    txtRequiredDate.ForeColor = Color.Gray;
-                    txtRequiredDate.Text = "DD/MM/YYYY";
-                }
-            };
+                ((TextBox)sender).ForeColor = Color.Gray;
+                ((TextBox)sender).Text = "DD/MM/YYYY";
+            }
         }
 
         public void RemovePanel(BrettProductPanel BPP)
@@ -223,11 +276,39 @@ namespace InterfaceLayer
             pnlList.Remove(BPP);
         }
 
-        public void AddNewProductPanel()
+        private void btnCommitDetails_Click(object sender, EventArgs e)
         {
-            AddPanel();
+            try
+            {
+                if (!blnErrorOccured)
+                {
+                    detailList = new List<OrderDetail>();
+
+                    foreach (BrettProductPanel pnl in pnlList)
+                    {
+                        if (pnl.selectedProductID != -1 && pnl.quantity > 0)
+                            detailList.Add(new OrderDetail(orderID, pnl.selectedProductID, pnl.totalPrice, pnl.quantity, pnl.discount));
+                    }
+                    Business.SaveDetails(orderID, detailList);
+                    //btnCommitDetails.Enabled = true;
+                }
+                else
+                    throw new Exception("You can't order the same product twice");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
-        
+        private void BPP_ErrorInCommit(bool error)
+        {
+            blnErrorOccured = error;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

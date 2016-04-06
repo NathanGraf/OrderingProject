@@ -16,24 +16,25 @@ namespace InterfaceLayer
 
         string CustomerID;
         int EmployeeID;
+        int OrderID;
         Customer Cust;
         List<Product> productItems;
-        Order NewOrder;
-        OrderDetail newOrderDetails;
-        List<OrderDetail> NewOrderDet;
+        Order ThisOrder;
+        OrderDetail newOrderDetail;
+        List<OrderDetail> OrderDetailList;
+        bool MakingNewOrder;
 
-        public OrderingFormLinda(string CustomerID, int EmployeeID)
+        public OrderingFormLinda(string CustomerID, int EmployeeID) //this constructor will be called if we are supposed to add a new order
         {
             InitializeComponent();
+            MakingNewOrder = true;
             this.CustomerID = CustomerID;
             this.EmployeeID = EmployeeID;
+
             lblCustomerID.Text = CustomerID;
-            List<Customer> Clist = Business.CustomerList();
-            foreach (Customer C in Clist)
-            {
-                if (C.CustomerID == CustomerID)
-                    Cust = C;
-            }
+            Cust = Business.GetCustomer(CustomerID);
+
+
             lblCompanyName.Text = Cust.CompanyName;
             txtCustName.Text = Cust.CompanyName;
             txtPostCode.Text = Cust.PostalCode;
@@ -53,7 +54,52 @@ namespace InterfaceLayer
             cbSelectProduct.DisplayMember = "ProductName";
             cbSelectProduct.ValueMember = "ProductID";
             cbSelectProduct.SelectedIndex = -1;
+
         }
+
+        public OrderingFormLinda(string CustomerID, int EmployeeID, int OrderID) //this constructor will be called if we are editing an existing order with orderid OrderID
+        {
+            InitializeComponent();
+            MakingNewOrder = false;
+            this.CustomerID = CustomerID;
+            this.EmployeeID = EmployeeID;
+            this.OrderID = OrderID;
+
+            lblCustomerID.Text = CustomerID;
+
+
+            //get order and details from business layer
+            //ThisOrder = Business.GetOrder(OrderID);
+            this.OrderDetailList = Business.OrderDetailList(OrderID);
+
+            //display order information and detail information
+
+            Cust = Business.GetCustomer(CustomerID);
+
+           //lblCompanyName.Name = "CompanyID";
+            txtCustName.Name = "CustomerID";
+            txtCustName.Text = CustomerID;
+            txtPostCode.Text = ThisOrder.ShipPostalCode;
+            txtShipAdd.Text = ThisOrder.ShipAddress;
+            txtShipCity.Text = ThisOrder.ShipCity;
+            txtshipCountry.Text = ThisOrder.ShipCountry;
+            lblEmpID.Text = EmployeeID.ToString();
+            txtShipRegion.Text = ThisOrder.ShipRegion;
+            txtPhoneNum.Name = "OrderID";
+            txtPhoneNum.Text = OrderID.ToString();
+            
+
+            cbShipVia.DataSource = Business.ShipperTable();
+            cbShipVia.ValueMember = "ShipperID";
+            cbShipVia.DisplayMember = "CompanyName";
+            cbShipVia.SelectedIndex = -1;
+
+            cbSelectProduct.DataSource = Business.ProductList();
+            cbSelectProduct.DisplayMember = newOrderDetail.ProductName;
+            cbSelectProduct.ValueMember = "ProductID";
+            cbSelectProduct.SelectedIndex = -1;
+        }
+
 
         private void OrderingFormLinda_Load(object sender, EventArgs e)
         {
@@ -89,10 +135,10 @@ namespace InterfaceLayer
                     int? shipvia = null;
 
                     shipvia = (int?)cbShipVia.SelectedValue;
-                    NewOrder = new Order(0, CustomerID, EmployeeID, DateTime.Now, dtReqDate.Value.Date, null, shipvia, null, txtCustName.Text,
+                    ThisOrder = new Order(0, CustomerID, EmployeeID, DateTime.Now, dtReqDate.Value.Date, null, shipvia, null, txtCustName.Text,
                        txtShipAdd.Text, txtShipCity.Text, txtShipRegion.Text, txtPostCode.Text, txtshipCountry.Text);
-                    Business.SaveOrder(NewOrder);
-                    txtOrderId.Text = NewOrder.OrderID.ToString();
+                    Business.SaveOrder(ThisOrder);
+                    txtOrderId.Text = ThisOrder.OrderID.ToString();
                 }
             }
             catch (Exception ex)
@@ -106,50 +152,41 @@ namespace InterfaceLayer
             try
             {
                 productItems = new List<Product>();
-                NewOrderDet = new List<OrderDetail>();
+                OrderDetailList = new List<OrderDetail>();
                 string selectedProduct = cbSelectProduct.SelectedText;
                 //DGV.DataSource = Business.OrderDetailList(Convert.ToInt32(txtOrderId.Text));
                 DGV.CurrentRow.Cells["Product"].Value = cbSelectProduct.SelectedValue;
-                DGV.CurrentRow.Cells["Quantity"].Value = newOrderDetails.Quantity;
+                DGV.CurrentRow.Cells["Quantity"].Value = newOrderDetail.Quantity;
 
                 txtChangeQuantity.Text = DGV.CurrentRow.Cells["Quantity"].Value.ToString();
 
                 if (Convert.ToInt32(txtChangeQuantity.Text) < 50)
                 {
-                    double normalPrice = Convert.ToInt32(txtChangeQuantity.Text) * Convert.ToUInt32(newOrderDetails.UnitPrice);
-                    DGV.CurrentRow.Cells["Price"].Value = newOrderDetails.UnitPrice;
+                    double normalPrice = Convert.ToInt32(txtChangeQuantity.Text) * Convert.ToUInt32(newOrderDetail.UnitPrice);
+                    DGV.CurrentRow.Cells["Price"].Value = newOrderDetail.UnitPrice;
                     DGV.CurrentRow.Cells["Total"].Value = normalPrice;
                 }
                 else if (Convert.ToInt32(txtChangeQuantity.Text) >= 50 || Convert.ToInt32(txtChangeQuantity.Text) < 100)
                 {
-                    double normalPrice = Convert.ToUInt32(newOrderDetails.UnitPrice) - (Convert.ToUInt32(newOrderDetails.UnitPrice) * .1);
+                    double normalPrice = Convert.ToUInt32(newOrderDetail.UnitPrice) - (Convert.ToUInt32(newOrderDetail.UnitPrice) * .1);
                     double TenPercent = Convert.ToUInt32(txtChangeQuantity.Text) * normalPrice;
                     DGV.CurrentRow.Cells["Price50To100"].Value = normalPrice;
                     DGV.CurrentRow.Cells["Total"].Value = TenPercent;
                 }
                 else if (Convert.ToInt32(txtChangeQuantity.Text) >= 100 || Convert.ToInt32(txtChangeQuantity.Text) < 500)
                 {
-                    double normalPrice = Convert.ToUInt32(newOrderDetails.UnitPrice) - (Convert.ToUInt32(newOrderDetails.UnitPrice) * .2);
+                    double normalPrice = Convert.ToUInt32(newOrderDetail.UnitPrice) - (Convert.ToUInt32(newOrderDetail.UnitPrice) * .2);
                     double TwentyPercent = Convert.ToUInt32(txtChangeQuantity.Text) * normalPrice;
                     DGV.CurrentRow.Cells["Price100To500"].Value = normalPrice;
                     DGV.CurrentRow.Cells["Total"].Value = TwentyPercent;
                 }
                 else if (Convert.ToInt32(txtChangeQuantity.Text) >= 500)
                 {
-                    double normalPrice = Convert.ToUInt32(newOrderDetails.UnitPrice) - (Convert.ToUInt32(newOrderDetails.UnitPrice) * .2);
+                    double normalPrice = Convert.ToUInt32(newOrderDetail.UnitPrice) - (Convert.ToUInt32(newOrderDetail.UnitPrice) * .2);
                     double ThirtyFivePercent = Convert.ToUInt32(txtChangeQuantity.Text) * normalPrice;
                     DGV.CurrentRow.Cells["Price500OrMore"].Value = normalPrice;
                     DGV.CurrentRow.Cells["Total"].Value = ThirtyFivePercent;
                 }
-
-                //foreach (DataGridView tmp in DGV.Controls)
-                //{
-                //    if (DGV.ProductName != null)
-                //    {
-
-                //    }
-                //}
-
             }
             catch (Exception ex)
             {

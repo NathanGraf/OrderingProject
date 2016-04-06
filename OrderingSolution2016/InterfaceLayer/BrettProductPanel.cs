@@ -22,9 +22,12 @@ namespace InterfaceLayer
         public delegate void CalculateFreight();
         public event CalculateFreight CalcFreight;
 
+        public delegate void ErrorOccured(bool error);
+        public event ErrorOccured ErrorInCommit;
+
         #region Fields
 
-        private ComboBox cmbProducts;
+        public ComboBox cmbProducts;
         private TextBox txtPrice;
         private TextBox txtUnits;
         private TextBox txtQuantity;
@@ -34,16 +37,19 @@ namespace InterfaceLayer
         private List<Product> productList = new List<Product>();
         private List<BrettProductPanel> panelList = new List<BrettProductPanel>();
         private int containerX = 0;
+        private bool isEdittingStart = false;
 
-        private short quantity = 0;
-        private decimal discount = 0;
-        private decimal price = 0;
+        private int defaultIndex = -1;
+        private string strUnits = "Quantity Per Unit";
 
         #endregion
 
         #region Properties
 
         public int selectedProductID { get; private set; }
+        public short quantity { get; private set; }
+        public float discount { get; private set; }
+        public decimal price { get; private set; }
         public decimal totalPrice { get; private set; }
         public decimal freight { get; private set; }
 
@@ -58,12 +64,45 @@ namespace InterfaceLayer
 
         public BrettProductPanel(List<BrettProductPanel> panelList, List<Product> productList, int containerWidth, int containerHeight, int containerLeft)
         {
+            this.selectedProductID = 0;
+            this.quantity = 1;
+            this.discount = 0;
+            this.price = 0.00m;
+            this.totalPrice = 0.00m;
+            this.freight = 0.00m;
+
+            SetupPanel(panelList, productList, containerWidth, containerHeight, containerLeft);
+        }
+
+        public BrettProductPanel(List<BrettProductPanel> panelList, List<Product> productList, int containerWidth, int containerHeight, int containerLeft, int selectedProductID, short quantity, float discount, decimal price)
+        {
+            this.quantity = quantity;
+            this.discount = discount;
+            this.price = price;
+            this.totalPrice = 0;
+            this.freight = 0;
+
+            SetupPanel(panelList, productList, containerWidth, containerHeight, containerLeft);
+
+            for (int i = 0; i < productList.Count; i++)
+            {
+                if (productList[i].ProductID == selectedProductID)
+                {
+                    defaultIndex = i;
+                }
+            }
+
+            isEdittingStart = true;
+        }
+
+        private void SetupPanel(List<BrettProductPanel> panelList, List<Product> productList, int containerWidth, int containerHeight, int containerLeft)
+        {
             this.panelList = panelList;
             this.productList = new List<Product>(productList);
             int panelCount = panelList.Count;
             containerX = containerLeft;
 
-            this.Width = containerWidth - 25;
+            this.Width = containerWidth - 10;
             this.Height = 40;
 
             if (panelList.Count > 0)
@@ -81,13 +120,13 @@ namespace InterfaceLayer
 
         private void SetupControls()
         {
-            int standardWidth = 100; //Yay magic numbers.
+            int standardWidth = 80; //Yay magic numbers.
             int standardHeight = this.Height - 18;
             int PosY = (this.Height / 4) - 2;
             int PosX = 5;
 
             cmbProducts = new ComboBox();
-            cmbProducts.Width = standardWidth * 2;
+            cmbProducts.Width = (standardWidth + 20) * 2;
             cmbProducts.Height = standardHeight;
             cmbProducts.Top = PosY;
             cmbProducts.Left = PosX;
@@ -97,15 +136,15 @@ namespace InterfaceLayer
             txtPrice.Height = standardHeight;
             txtPrice.Top = PosY;
             txtPrice.Left = cmbProducts.Left + cmbProducts.Width + PosX;
-            txtPrice.Text = "0";
+            txtPrice.Text = price.ToString("#,##0.00"); // I need to test this before doing it to the rest.
             txtPrice.Name = "txtPrice" + panelList.Count;
 
             txtUnits = new TextBox();
-            txtUnits.Width = standardWidth;
+            txtUnits.Width = standardWidth + 20;
             txtUnits.Height = standardHeight;
             txtUnits.Top = PosY;
             txtUnits.Left = txtPrice.Left + txtPrice.Width + PosX;
-            txtUnits.Text = "x Boxes Per Unit";
+            txtUnits.Text = strUnits;
             txtUnits.Name = "txtUnits" + panelList.Count;
             txtUnits.ReadOnly = true;
 
@@ -114,15 +153,15 @@ namespace InterfaceLayer
             txtQuantity.Height = standardHeight;
             txtQuantity.Top = PosY;
             txtQuantity.Left = txtUnits.Left + txtUnits.Width + PosX;
-            txtQuantity.Text = "1";
+            txtQuantity.Text = quantity.ToString();
             txtQuantity.Name = "txtQuantity" + panelList.Count;
 
             txtDiscount = new TextBox();
             txtDiscount.Width = standardWidth;
             txtDiscount.Height = standardHeight;
             txtDiscount.Top = PosY;
-            txtDiscount.Left = txtQuantity.Left + standardWidth + PosX;
-            txtDiscount.Text = "0";
+            txtDiscount.Left = txtQuantity.Left + txtQuantity.Width + PosX;
+            txtDiscount.Text = discount.ToString();
             txtDiscount.Name = "txtDiscount" + panelList.Count;
             txtDiscount.ForeColor = Color.Gray;
 
@@ -130,7 +169,7 @@ namespace InterfaceLayer
             txtTotalPrice.Width = standardWidth;
             txtTotalPrice.Height = standardHeight;
             txtTotalPrice.Top = PosY;
-            txtTotalPrice.Left = txtDiscount.Left + standardWidth + PosX;
+            txtTotalPrice.Left = txtDiscount.Left + txtDiscount.Width + PosX;
             txtTotalPrice.ReadOnly = true;
             txtTotalPrice.Text = "0.00";
             txtTotalPrice.Name = "txtTotalPrice" + panelList.Count;
@@ -178,6 +217,8 @@ namespace InterfaceLayer
                         }
                     }
                 }
+
+                CalcFreight();
             };
 
             txtQuantity.TextChanged += (sender, e) =>
@@ -226,10 +267,9 @@ namespace InterfaceLayer
             if (cmbProducts.SelectedIndex == -1)
                 return;
 
-            selectedProductID = cmbProducts.SelectedIndex;
-            
-            txtUnits.Text = productList[selectedProductID].QuantityPerUnit;
-            txtPrice.Text = productList[selectedProductID].UnitPrice.ToString();
+            selectedProductID = (int)cmbProducts.SelectedValue;
+
+            txtUnits.Text = productList[selectedProductID - 1].QuantityPerUnit;
 
             this.BackColor = Color.Transparent;
 
@@ -243,15 +283,30 @@ namespace InterfaceLayer
                 if (panelList[i] != this && panelList[i].selectedProductID == this.selectedProductID)
                 {
                     this.BackColor = Color.Red;
+                    ErrorInCommit(true);
+                }
+                else
+                {
+                    ErrorInCommit(false);
                 }
             }
 
-            if (currentPanelIndex == panelIndexCount)
-            {
-                AddProductPanel();
-            }
-
             PrepForCalculation();
+
+            // This is set so that if the user is editing it will not destroy the last copy of anything needed.
+            if (!isEdittingStart)
+            {
+                txtPrice.Text = productList[selectedProductID - 1].UnitPrice.ToString("#,##0.00");
+
+                if (currentPanelIndex == panelIndexCount)
+                {
+                    AddProductPanel();
+                }
+            }
+            else
+            {
+                isEdittingStart = false;
+            }
         }
 
         private void AddContols()
@@ -279,27 +334,27 @@ namespace InterfaceLayer
         {
             try
             {
-                string priceExpression = @"^[0-9]([.,][0-9]{1,3})?$";
+                string priceExpression = @"^([0-9,]+)([.][0-9]{0,2})?$";
                 Regex priceRegex = new Regex(priceExpression);
 
-                string quantityExpression = @"^[1-9]\d{0,4}$";
+                string quantityExpression = @"^([1-9]\d{0,3})$";
                 Regex quantityRegex = new Regex(quantityExpression);
 
-                string discountExpression = @"^[0-9]\d{0,2}$";
+                string discountExpression = @"^([0-9]\d{0,2})$";
                 Regex discountRegex = new Regex(discountExpression);
 
-                quantity = 0;
+                quantity = 1;
                 discount = 0;
                 price = 0;
 
                 int index = -1;
 
                 if (cmbProducts.SelectedValue != null)
-                    index = Convert.ToInt32(cmbProducts.SelectedValue);
+                    index = Convert.ToInt32(cmbProducts.SelectedIndex);
 
                 if (!(priceRegex.IsMatch(txtPrice.Text)))
                 {
-                    txtPrice.Text = productList[index].UnitPrice.ToString();
+                    txtPrice.Text = productList[index].UnitPrice.ToString("#,##0.00");
                     throw new Exception("Only positive decimal values are allowed to be entered");
                 }
                 else
@@ -346,8 +401,8 @@ namespace InterfaceLayer
                 decimal discountPrice = 0;
 
                 // Puts the discount into percentage. Then adds one so when it is used it will take the percentage off.
-                discount = discount / 100m;
-                discountPrice = productList[index].UnitPrice * quantity * discount;
+                discount = discount / 100;
+                discountPrice = productList[index].UnitPrice * quantity * Convert.ToDecimal(discount);
 
                 totalPrice = (productList[index].UnitPrice * quantity) - discountPrice;
 
@@ -356,12 +411,17 @@ namespace InterfaceLayer
             }
         }
 
+        private void LoadPanel()
+        {
+            txtUnits.Text = productList[selectedProductID - 1].QuantityPerUnit;
+        }
+
         /// <summary>
         /// For some reason selected index doesnt want to play nice, so I call it again at the end of it all.
         /// </summary>
         public void WowSelectedIndexIsAnnoying()
         {
-            cmbProducts.SelectedIndex = -1;
+            cmbProducts.SelectedIndex = defaultIndex;
         }
     }
 }

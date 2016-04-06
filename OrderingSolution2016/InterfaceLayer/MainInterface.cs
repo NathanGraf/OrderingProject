@@ -100,7 +100,8 @@ namespace InterfaceLayer
 
         private void btnEditOrder_Click(object sender, EventArgs e)
         {
-
+            OrderingFormPicker OFP = new OrderingFormPicker(CurCustomer.CustomerID, 11, 12300);
+            OFP.Show();
         }
 
         private void btnNewOrder_Click(object sender, EventArgs e)
@@ -111,6 +112,23 @@ namespace InterfaceLayer
 
         private void btnReOrder_Click(object sender, EventArgs e)
         {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Customer C = Business.GetCustomer("VADER");
+            C.Address = "Slacks farm";
+            Business.UpdateExistingCustomer(C);
+            string Message = null;
+            if (Business.CustomerIDAvailableAndSuitable("Varod", ref Message))
+            {
+            C = new Customer("Varod");
+            C.CompanyName = "Varoddddd";
+            Business.SaveNewCustomer(C);
+            }
+            else
+                MessageBox.Show (Message);
 
         }
     }
